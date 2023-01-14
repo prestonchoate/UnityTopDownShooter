@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1727314499092016231}
   - component: {fileID: 1727314499092016226}
   - component: {fileID: 1727314499092016227}
-  - component: {fileID: 7946192232699676393}
+  - component: {fileID: 8145505954549329597}
   m_Layer: 9
   m_Name: Player
   m_TagString: Player
@@ -163,7 +163,7 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!114 &7946192232699676393
+--- !u!114 &8145505954549329597
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -172,11 +172,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 1727314499092016229}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0ba6d93010dd67b16a41a2c02f1bcd94, type: 3}
+  m_Script: {fileID: 11500000, guid: ddf487295c0c6dfe9b469f8043b3cc2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   healthBarPrefab: {fileID: 2052066568862144310, guid: 8ccbc9b2860484e02936e0d6263bbe56, type: 3}
-  positionOffset: {x: 0, y: -1, z: 0}
+  healthPositionOffset: {x: 0, y: -1, z: 0}
+  expBarPrefab: {fileID: 7258632015047710931, guid: 0a50bea8a14b2262b88af4eecdc97f5c, type: 3}
+  expPositionOffset: {x: 0, y: -1.51, z: 0}
 --- !u!1 &1727314499765121635
 GameObject:
   m_ObjectHideFlags: 0
