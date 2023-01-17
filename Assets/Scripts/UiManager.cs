@@ -5,6 +5,7 @@ public class UiManager : MonoBehaviour
 {
 
     [SerializeField] private TextMeshProUGUI mainText;
+    [SerializeField] private TextMeshProUGUI subText;
 
     void OnEnable()
     {
@@ -24,15 +25,16 @@ public class UiManager : MonoBehaviour
                 mainText.text = "Paused";
                 mainText.gameObject.SetActive(true);
                 break;
-            case GameStates.Playing:
-                mainText.gameObject.SetActive(false);
-                break;
             case GameStates.GameOver:
                 mainText.text = "Game Over";
                 mainText.gameObject.SetActive(true);
+                // TODO: Fix positioning of the sub text
+                subText.text = "Press R to Try Again";
+                subText.gameObject.SetActive(true);
                 break;
             default:
                 mainText.gameObject.SetActive(false);
+                subText.gameObject.SetActive(false);
                 break;
         }
     }

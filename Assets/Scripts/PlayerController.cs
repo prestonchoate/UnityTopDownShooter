@@ -8,10 +8,8 @@ public class PlayerController : MonoBehaviour
     public static event Action<int> LevelUp;
     public static event Action Died;
 
-    [SerializeField]
-    private float moveSpeed = 5.0f;
-    [SerializeField]
-    private AnimationCurve expCurve;
+    [SerializeField] private float defaultMoveSpeed = 5.0f;
+    [SerializeField] private AnimationCurve expCurve;
 
     private Weapon weapon;
     private BarManager healthBarManager;
@@ -22,6 +20,8 @@ public class PlayerController : MonoBehaviour
     private float expToNextLevel;
     private int currentLevel = 1;
     private float maxHp = 100.0f;
+    private float defaultHp = 100.0f;
+    private float moveSpeed;
     private float currentHp;
     private bool paused;
 
@@ -30,6 +30,7 @@ public class PlayerController : MonoBehaviour
         rb = this.GetComponent<Rigidbody2D>();
         weapon = this.GetComponentInChildren<Weapon>();
         healthBarManager = this.GetComponent<BarManager>();
+        moveSpeed = defaultMoveSpeed;
 
     }
 
@@ -49,6 +50,7 @@ public class PlayerController : MonoBehaviour
     {
         currentHp = maxHp;
         UpdateExpToGain();
+        totalExperience = expCurve.Evaluate((float)currentLevel);
     }
 
     void Update()
@@ -136,5 +138,18 @@ public class PlayerController : MonoBehaviour
     void CheckState(GameStates newState)
     {
         paused = newState == GameStates.Paused;
+    }
+
+    public void Reset(Vector2 position)
+    {
+        transform.position = position;
+        currentHp = defaultHp;
+        maxHp = defaultHp;
+        currentLevel = 1;
+        totalExperience = expCurve.Evaluate((float)currentLevel);
+        UpdateExpToGain();
+        moveSpeed = defaultMoveSpeed;
+        weapon.Reset();
+        // TODO: Update bar positions
     }
 }

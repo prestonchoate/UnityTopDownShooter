@@ -72,6 +72,11 @@ public class GameManager : MonoBehaviour
                     break;
             }
         }
+
+        if (gameState == GameStates.GameOver && Input.GetKeyDown(KeyCode.R))
+        {
+            RestartGame();
+        }
     }
 
     void SpawnLoot(GameObject go)
@@ -110,5 +115,15 @@ public class GameManager : MonoBehaviour
     {
         gameState = newState;
         GameStateChanged?.Invoke(gameState);
+    }
+
+    void RestartGame()
+    {
+        ChangeGameState(GameStates.Loading);
+        Player.gameObject.SetActive(false);
+        Player.GetComponent<PlayerController>()?.Reset(defaultPlayerPosition);
+        EnemyManager.Instance.DeactivateAllEnemies();
+        Player.SetActive(true);
+        ChangeGameState(GameStates.Playing);
     }
 }

@@ -10,6 +10,7 @@ public class EnemyManager : MonoBehaviour
     [SerializeField]
     private GameObject enemyPrefab;
     private int enemiesToPreload = 1000;
+    // TODO: Switch this to the built in ObjectPool
     private static List<GameObject> enemies = new List<GameObject>();
     private int minX, minY = -250;
     private int maxX, maxY = 250;
@@ -90,9 +91,9 @@ public class EnemyManager : MonoBehaviour
         return pos;
     }
 
-    // Update is called once per frame
     void Update()
     {
+        // TODO: implement paused state here
         spawnTime -= Time.deltaTime;
         if (spawnTime <= 0.0f)
         {
@@ -105,5 +106,10 @@ public class EnemyManager : MonoBehaviour
     {
         enemy.SetActive(false);
         activeEnemies--;
+    }
+
+    public void DeactivateAllEnemies()
+    {
+        enemies.ForEach(e => e.gameObject.SetActive(false));
     }
 }

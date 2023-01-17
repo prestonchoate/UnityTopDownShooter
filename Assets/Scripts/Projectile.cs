@@ -1,9 +1,10 @@
+using System;
 using UnityEngine;
 
 public class Projectile : MonoBehaviour
 {
-    [SerializeField]
-    private float damage = 0.0f;
+    public static event Action<Projectile> Die;
+    [SerializeField] private float damage = 0.0f;
 
     private float lifetime = 10.0f;
     private bool paused = false;
@@ -34,14 +35,16 @@ public class Projectile : MonoBehaviour
             lifetime -= Time.deltaTime;
             if (lifetime <= 0)
             {
-                Destroy(gameObject);
+                // Destroy(gameObject);
+                gameObject.SetActive(false);
             }
         }
     }
 
     void OnCollisionEnter2D(Collision2D other)
     {
-        Destroy(gameObject);
+        // Destroy(gameObject);
+        gameObject.SetActive(false);
     }
 
     public float GetDamage()
