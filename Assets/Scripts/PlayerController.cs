@@ -9,6 +9,8 @@ public class PlayerController : MonoBehaviour
     public static event GainExp GainedExperience;
     public delegate void Level(int level);
     public static event Level LevelUp;
+    public delegate void PlayerDeath();
+    public static event PlayerDeath Died;
 
     [SerializeField]
     private float moveSpeed = 5.0f;
@@ -104,18 +106,15 @@ public class PlayerController : MonoBehaviour
     void UpdateHealth(float adjustment)
     {
         currentHp += adjustment;
-        //healthBarManager.UpdateHealth(currentHp, maxHp);
-        if (adjustment < 0.0f)
-        {
-            PlayerDamaged?.Invoke(adjustment, currentHp, maxHp);
-        }
+        PlayerDamaged?.Invoke(adjustment, currentHp, maxHp);
         if (currentHp > maxHp)
         {
             currentHp = maxHp;
         }
         if (currentHp <= 0.0f)
         {
-            // TODO: implement death state
+            Died?.Invoke();
+
         }
     }
 }

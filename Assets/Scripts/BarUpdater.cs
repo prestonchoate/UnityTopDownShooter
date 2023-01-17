@@ -6,24 +6,21 @@ public class BarUpdater : MonoBehaviour
 {
     public bool HasText { get; set; }
 
-    [SerializeField]
     private Image fillImage;
-    [SerializeField]
-    private GameObject levelTextContainer;
-    private TextMeshPro levelText;
+    private TextMeshProUGUI levelText;
 
     void Start()
     {
-        levelText = levelTextContainer.GetComponent<TextMeshPro>();
-        // fillImage = gameObject.GetComponent<Image>();
-        // if (HasText)
-        // {
-        //     levelText = gameObject.GetComponentInChildren<TextMeshPro>();
-        //     if (levelText is null)
-        //     {
-        //         Debug.Log("Could not find level text object");
-        //     }
-        // }
+        fillImage = this.GetComponent<Image>();
+        if (HasText)
+        {
+            levelText = this.GetComponentInChildren<TextMeshProUGUI>();
+            if (levelText is null)
+            {
+                Debug.Log("Could not find level text object");
+
+            }
+        }
     }
 
     public void UpdateBar(float fillAmount)
@@ -35,8 +32,6 @@ public class BarUpdater : MonoBehaviour
     {
         if (HasText && levelText is not null)
         {
-            Debug.Log($"Level is {level}");
-            // Update Text to level
             levelText.text = level.ToString();
         }
     }

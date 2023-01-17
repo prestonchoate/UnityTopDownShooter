@@ -48,6 +48,7 @@ public class GameManager : MonoBehaviour
         // TODO: Create an event for changing game states
         gameState = GameStates.Loading;
         Enemy.EnemyKilled += SpawnLoot;
+        PlayerController.Died += HandlePlayerDeath;
         SpawnPlayer();
         CreateEnemyManager();
         // TODO: Set a more appropriate state and create transitions
@@ -57,6 +58,7 @@ public class GameManager : MonoBehaviour
     void OnDisable()
     {
         Enemy.EnemyKilled -= SpawnLoot;
+        PlayerController.Died -= HandlePlayerDeath;
     }
 
     void SpawnLoot(GameObject go)
@@ -83,5 +85,11 @@ public class GameManager : MonoBehaviour
     void CreateEnemyManager()
     {
         enemyManager = GameObject.Instantiate(enemyManagerPrefab, new Vector3(), new Quaternion());
+    }
+
+    void HandlePlayerDeath()
+    {
+        Player.SetActive(false);
+        gameState = GameStates.GameOver;
     }
 }

@@ -16,8 +16,6 @@ public class Experience : MonoBehaviour
     void Start()
     {
         expValue = Random.Range(minExpValue, maxExpValue);
-        // TODO: remove this later
-        expValue = Random.Range(300.0f, 1000.0f);
     }
 
     void OnTriggerEnter2D(Collider2D other)

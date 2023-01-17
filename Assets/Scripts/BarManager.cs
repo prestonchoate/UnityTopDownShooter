@@ -33,6 +33,7 @@ public class BarManager : MonoBehaviour
         PlayerController.PlayerDamaged += UpdateHealth;
         PlayerController.GainedExperience += UpdateExp;
         PlayerController.LevelUp += UpdateLevel;
+        PlayerController.Died += DisableBars;
     }
 
     void OnDisable()
@@ -40,6 +41,7 @@ public class BarManager : MonoBehaviour
         PlayerController.PlayerDamaged -= UpdateHealth;
         PlayerController.GainedExperience -= UpdateExp;
         PlayerController.LevelUp -= UpdateLevel;
+        PlayerController.Died -= DisableBars;
     }
 
     void LateUpdate()
@@ -60,7 +62,12 @@ public class BarManager : MonoBehaviour
 
     void UpdateLevel(int level)
     {
-        Debug.Log("Attempting to update level text");
         expUpdater.UpdateLevel(level);
+    }
+
+    void DisableBars()
+    {
+        healthBar.SetActive(false);
+        expBar.SetActive(false);
     }
 }
