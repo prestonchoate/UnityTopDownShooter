@@ -1,16 +1,12 @@
+using System;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-
-    public delegate void TakeDamage(float damageAmount, float currentHP, float maxHP);
-    public static event TakeDamage PlayerDamaged;
-    public delegate void GainExp(float expGained, float totalExp, float expToNextLevel);
-    public static event GainExp GainedExperience;
-    public delegate void Level(int level);
-    public static event Level LevelUp;
-    public delegate void PlayerDeath();
-    public static event PlayerDeath Died;
+    public static event Action<float, float, float> PlayerDamaged;
+    public static event Action<float, float, float> GainedExperience;
+    public static event Action<int> LevelUp;
+    public static event Action Died;
 
     [SerializeField]
     private float moveSpeed = 5.0f;
@@ -27,19 +23,26 @@ public class PlayerController : MonoBehaviour
     private int currentLevel = 1;
     private float maxHp = 100.0f;
     private float currentHp;
+    private bool paused;
 
     void Awake()
     {
         rb = this.GetComponent<Rigidbody2D>();
         weapon = this.GetComponentInChildren<Weapon>();
         healthBarManager = this.GetComponent<BarManager>();
-        Experience.OnExperiencePickup += AddExperience;
 
+    }
+
+    void OnEnable()
+    {
+        Experience.OnExperiencePickup += AddExperience;
+        GameManager.GameStateChanged += CheckState;
     }
 
     void OnDisable()
     {
         Experience.OnExperiencePickup -= AddExperience;
+        GameManager.GameStateChanged -= CheckState;
     }
 
     void Start()
@@ -50,25 +53,37 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        float moveX = Input.GetAxisRaw("Horizontal");
-        float moveY = Input.GetAxisRaw("Vertical");
-
-        if (Input.GetMouseButton(0) || Input.GetKey(KeyCode.Space))
+        if (!paused)
         {
-            weapon.Fire();
-        }
+            float moveX = Input.GetAxisRaw("Horizontal");
+            float moveY = Input.GetAxisRaw("Vertical");
 
-        moveDirection = new Vector2(moveX, moveY).normalized;
-        mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        CheckExperience();
+            if (Input.GetMouseButton(0) || Input.GetKey(KeyCode.Space))
+            {
+                weapon.Fire();
+            }
+
+            moveDirection = new Vector2(moveX, moveY).normalized;
+            mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            CheckExperience();
+        }
     }
 
     void FixedUpdate()
     {
-        rb.velocity = new Vector2(moveDirection.x * moveSpeed, moveDirection.y * moveSpeed);
-        Vector2 aimDirection = mousePosition - rb.position;
-        float aimAngle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg - 90f;
-        rb.rotation = aimAngle;
+        if (!paused)
+        {
+            rb.velocity = new Vector2(moveDirection.x * moveSpeed, moveDirection.y * moveSpeed);
+            Vector2 aimDirection = mousePosition - rb.position;
+            float aimAngle = Mathf.Atan2(aimDirection.y, aimDirection.x) * Mathf.Rad2Deg - 90f;
+            rb.rotation = aimAngle;
+        }
+        else
+        {
+            // Immediately stop if the game is paused
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = 0.0f;
+        }
     }
 
     void AddExperience(float expValue)
@@ -116,5 +131,10 @@ public class PlayerController : MonoBehaviour
             Died?.Invoke();
 
         }
+    }
+
+    void CheckState(GameStates newState)
+    {
+        paused = newState == GameStates.Paused;
     }
 }

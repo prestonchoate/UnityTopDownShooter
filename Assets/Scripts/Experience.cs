@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class Experience : MonoBehaviour
@@ -10,12 +11,11 @@ public class Experience : MonoBehaviour
     private float timeToLive = 5.0f;
 
     private float expValue;
-    public delegate void ExperiencePickup(float expValue);
-    public static event ExperiencePickup OnExperiencePickup;
+    public static event Action<float> OnExperiencePickup;
 
     void Start()
     {
-        expValue = Random.Range(minExpValue, maxExpValue);
+        expValue = UnityEngine.Random.Range(minExpValue, maxExpValue);
     }
 
     void OnTriggerEnter2D(Collider2D other)

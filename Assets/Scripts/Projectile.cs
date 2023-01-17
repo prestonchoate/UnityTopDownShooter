@@ -6,20 +6,36 @@ public class Projectile : MonoBehaviour
     private float damage = 0.0f;
 
     private float lifetime = 10.0f;
+    private bool paused = false;
+    private Rigidbody2D rb;
+    private Vector3 velocity;
+    private float angularVelocity;
 
-    // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
+        rb = this.GetComponent<Rigidbody2D>();
+    }
 
+    void OnEnable()
+    {
+        GameManager.GameStateChanged += CheckState;
+    }
+
+    void OnDisable()
+    {
+        GameManager.GameStateChanged -= CheckState;
     }
 
     // Update is called once per frame
     void Update()
     {
-        lifetime -= Time.deltaTime;
-        if (lifetime <= 0)
+        if (!paused)
         {
-            Destroy(gameObject);
+            lifetime -= Time.deltaTime;
+            if (lifetime <= 0)
+            {
+                Destroy(gameObject);
+            }
         }
     }
 
@@ -37,4 +53,23 @@ public class Projectile : MonoBehaviour
     {
         damage = damageVal;
     }
+
+    void CheckState(GameStates newState)
+    {
+        paused = newState == GameStates.Paused;
+        if (paused)
+        {
+            velocity = rb.velocity;
+            angularVelocity = rb.angularVelocity;
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = 0.0f;
+        }
+        else
+        {
+            rb.velocity = velocity;
+            rb.angularVelocity = angularVelocity;
+        }
+    }
+
+
 }

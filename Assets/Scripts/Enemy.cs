@@ -1,9 +1,9 @@
+using System;
 using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-    public delegate void Deactivate(GameObject enemy);
-    public static event Deactivate EnemyKilled;
+    public static event Action<GameObject> EnemyKilled;
 
     public float Damage { get; private set; }
 
@@ -19,6 +19,7 @@ public class Enemy : MonoBehaviour
     private Vector3 velocity = Vector3.zero;
     private float minDamage = 5.0f;
     private float maxDamage = 15.0f;
+    private bool paused = false;
 
     void Awake()
     {
@@ -33,21 +34,38 @@ public class Enemy : MonoBehaviour
 
     void OnEnable()
     {
-        Damage = Random.Range(minDamage, maxDamage);
+        Damage = UnityEngine.Random.Range(minDamage, maxDamage);
+        GameManager.GameStateChanged += CheckState;
+    }
+
+    void OnDisable()
+    {
+        GameManager.GameStateChanged -= CheckState;
     }
 
     // Update is called once per frame
     void Update()
     {
-        // targetOffset = GenerateNewOffset();
-        // targetPos = Vector3.SmoothDamp(rb.transform.position, target.transform.position + targetOffset, ref velocity, 0.15f, moveSpeed);
-        targetPos = target.transform.position - rb.transform.position + targetOffset;
-        targetPos.Normalize();
+        if (!paused)
+        {
+            targetPos = target.transform.position - rb.transform.position + targetOffset;
+            targetPos.Normalize();
+        }
     }
 
     void FixedUpdate()
     {
-        rb.MovePosition(rb.transform.position + targetPos * moveSpeed * Time.fixedDeltaTime);
+        if (!paused)
+        {
+            rb.MovePosition(rb.transform.position + targetPos * moveSpeed * Time.fixedDeltaTime);
+        }
+        else
+        {
+            // Immediately stop if the game is paused
+            // TODO: Convert this to a reusable "Pausable" script
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = 0.0f;
+        }
     }
 
     void OnCollisionEnter2D(Collision2D other)
@@ -71,6 +89,11 @@ public class Enemy : MonoBehaviour
 
     Vector3 GenerateNewOffset()
     {
-        return new Vector3(Random.Range(-8.0f, 8.0f), Random.Range(-8.0f, 8.0f), 0.0f);
+        return new Vector3(UnityEngine.Random.Range(-8.0f, 8.0f), UnityEngine.Random.Range(-8.0f, 8.0f), 0.0f);
+    }
+
+    void CheckState(GameStates newState)
+    {
+        paused = newState == GameStates.Paused;
     }
 }

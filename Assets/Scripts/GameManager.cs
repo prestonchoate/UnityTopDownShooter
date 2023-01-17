@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public enum GameStates
@@ -12,24 +13,21 @@ public enum GameStates
 
 public class GameManager : MonoBehaviour
 {
+    public static Action<GameStates> GameStateChanged;
 
     public static GameManager Instance { get; private set; }
 
     public Canvas WorldSpaceCanvas { get; private set; }
-
-    [SerializeField]
-    private GameObject lootPrefab;
-    [SerializeField]
-    private GameObject playerPrefab;
-    [SerializeField]
-    private GameObject enemyManagerPrefab;
-    [SerializeField]
-    private Canvas worldSpaceCanvas;
-
-
     public GameObject Player { get; private set; }
+
+    [SerializeField] private GameObject lootPrefab;
+    [SerializeField] private GameObject playerPrefab;
+    [SerializeField] private GameObject enemyManagerPrefab;
+    [SerializeField] private Canvas worldSpaceCanvas;
+
     private GameObject enemyManager;
     private GameStates gameState;
+    private GameStates previousState;
     private Vector3 defaultPlayerPosition = new Vector3(0, 0, 0);
 
 
@@ -45,20 +43,35 @@ public class GameManager : MonoBehaviour
             Instance = this;
         }
         WorldSpaceCanvas = worldSpaceCanvas;
-        // TODO: Create an event for changing game states
-        gameState = GameStates.Loading;
+        ChangeGameState(GameStates.Loading);
         Enemy.EnemyKilled += SpawnLoot;
         PlayerController.Died += HandlePlayerDeath;
         SpawnPlayer();
         CreateEnemyManager();
-        // TODO: Set a more appropriate state and create transitions
-        gameState = GameStates.Playing;
+        ChangeGameState(GameStates.Playing);
     }
 
     void OnDisable()
     {
         Enemy.EnemyKilled -= SpawnLoot;
         PlayerController.Died -= HandlePlayerDeath;
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            switch (gameState)
+            {
+                case GameStates.Paused:
+                    ChangeGameState(previousState);
+                    break;
+                default:
+                    previousState = gameState;
+                    ChangeGameState(GameStates.Paused);
+                    break;
+            }
+        }
     }
 
     void SpawnLoot(GameObject go)
@@ -69,12 +82,12 @@ public class GameManager : MonoBehaviour
 
     public static int GetRandomInteger(int min = 0, int max = 100)
     {
-        return Random.Range(min, max + 1);
+        return UnityEngine.Random.Range(min, max + 1);
     }
 
     public static float GetRandomFloat(float min = 0.0f, float max = 100.0f)
     {
-        return Random.Range(min, max);
+        return UnityEngine.Random.Range(min, max);
     }
 
     void SpawnPlayer()
@@ -90,6 +103,12 @@ public class GameManager : MonoBehaviour
     void HandlePlayerDeath()
     {
         Player.SetActive(false);
-        gameState = GameStates.GameOver;
+        ChangeGameState(GameStates.GameOver);
+    }
+
+    void ChangeGameState(GameStates newState)
+    {
+        gameState = newState;
+        GameStateChanged?.Invoke(gameState);
     }
 }
