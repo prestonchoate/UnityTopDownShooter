@@ -1,4 +1,5 @@
 using System;
+using UnityEditor;
 using UnityEngine;
 
 public enum GameStates
@@ -13,12 +14,12 @@ public enum GameStates
 
 public class GameManager : MonoBehaviour
 {
-    public static Action<GameStates> GameStateChanged;
+    public static event Action<GameStates> GameStateChanged;
+    public static event Action<int> ScoreUpdated;
 
     public static GameManager Instance { get; private set; }
-
-    public Canvas WorldSpaceCanvas { get; private set; }
     public GameObject Player { get; private set; }
+    public int Score { get; private set; }
 
     [SerializeField] private GameObject lootPrefab;
     [SerializeField] private GameObject playerPrefab;
@@ -42,10 +43,11 @@ public class GameManager : MonoBehaviour
         {
             Instance = this;
         }
-        WorldSpaceCanvas = worldSpaceCanvas;
         ChangeGameState(GameStates.Loading);
-        Enemy.EnemyKilled += SpawnLoot;
+        Enemy.Killed += SpawnLoot;
         PlayerController.Died += HandlePlayerDeath;
+        Score = 0;
+        ScoreUpdated?.Invoke(Score);
         SpawnPlayer();
         CreateEnemyManager();
         ChangeGameState(GameStates.Playing);
@@ -53,7 +55,7 @@ public class GameManager : MonoBehaviour
 
     void OnDisable()
     {
-        Enemy.EnemyKilled -= SpawnLoot;
+        Enemy.Killed -= SpawnLoot;
         PlayerController.Died -= HandlePlayerDeath;
     }
 
@@ -73,14 +75,24 @@ public class GameManager : MonoBehaviour
             }
         }
 
+        if (gameState == GameStates.Paused && Input.GetKeyDown(KeyCode.Q))
+        {
+            Application.Quit();
+#if (UNITY_EDITOR)
+            EditorApplication.ExitPlaymode();
+#endif
+        }
+
         if (gameState == GameStates.GameOver && Input.GetKeyDown(KeyCode.R))
         {
             RestartGame();
         }
     }
 
-    void SpawnLoot(GameObject go)
+    void SpawnLoot(Enemy go)
     {
+        Score += 100;
+        ScoreUpdated.Invoke(Score);
         // TODO: Make this pull spawnable loot from the gameObject passed into this event observer
         GameObject.Instantiate(lootPrefab, go.transform.position, go.transform.rotation);
     }
@@ -123,6 +135,8 @@ public class GameManager : MonoBehaviour
         Player.gameObject.SetActive(false);
         Player.GetComponent<PlayerController>()?.Reset(defaultPlayerPosition);
         EnemyManager.Instance.DeactivateAllEnemies();
+        Score = 0;
+        ScoreUpdated.Invoke(Score);
         Player.SetActive(true);
         ChangeGameState(GameStates.Playing);
     }

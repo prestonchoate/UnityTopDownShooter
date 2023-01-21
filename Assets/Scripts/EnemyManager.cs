@@ -35,12 +35,12 @@ public class EnemyManager : MonoBehaviour
         enemyContainer = new GameObject("EnemyContainer");
         enemyContainer.transform.SetParent(transform);
         LoadObjectPool(enemiesToPreload);
-        Enemy.EnemyKilled += DeactivateEnemy;
+        Enemy.Killed += DeactivateEnemy;
     }
 
     void OnDisable()
     {
-        Enemy.EnemyKilled -= DeactivateEnemy;
+        Enemy.Killed -= DeactivateEnemy;
     }
 
     // Function to add additional enemies to the pool
@@ -102,14 +102,15 @@ public class EnemyManager : MonoBehaviour
         }
     }
 
-    void DeactivateEnemy(GameObject enemy)
+    void DeactivateEnemy(Enemy enemy)
     {
-        enemy.SetActive(false);
+        enemy.gameObject.SetActive(false);
         activeEnemies--;
     }
 
     public void DeactivateAllEnemies()
     {
         enemies.ForEach(e => e.gameObject.SetActive(false));
+        activeEnemies = 0;
     }
 }

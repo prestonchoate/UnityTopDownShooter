@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-    public static event Action<GameObject> EnemyKilled;
+    public static event Action<Enemy> Killed;
 
     public float Damage { get; private set; }
 
@@ -83,7 +83,7 @@ public class Enemy : MonoBehaviour
         hp -= damage;
         if (hp <= 0)
         {
-            EnemyKilled(gameObject);
+            Killed(this);
         }
     }
 

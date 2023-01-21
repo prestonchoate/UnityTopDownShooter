@@ -3,8 +3,8 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    public static event Action<float, float, float> PlayerDamaged;
-    public static event Action<float, float, float> GainedExperience;
+    public static event Action<float, float, float> HealthChanged;
+    public static event Action<float> GainedExperience;
     public static event Action<int> LevelUp;
     public static event Action Died;
 
@@ -12,7 +12,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private AnimationCurve expCurve;
 
     private Weapon weapon;
-    private BarManager healthBarManager;
     private Rigidbody2D rb;
     private Vector2 moveDirection;
     private Vector2 mousePosition;
@@ -29,7 +28,6 @@ public class PlayerController : MonoBehaviour
     {
         rb = this.GetComponent<Rigidbody2D>();
         weapon = this.GetComponentInChildren<Weapon>();
-        healthBarManager = this.GetComponent<BarManager>();
         moveSpeed = defaultMoveSpeed;
 
     }
@@ -91,7 +89,7 @@ public class PlayerController : MonoBehaviour
     void AddExperience(float expValue)
     {
         totalExperience += expValue;
-        GainedExperience?.Invoke(expValue, totalExperience, expToNextLevel);
+        GainedExperience?.Invoke(totalExperience / expToNextLevel);
     }
 
     void CheckExperience()
@@ -100,7 +98,6 @@ public class PlayerController : MonoBehaviour
         {
             currentLevel++;
             LevelUp?.Invoke(currentLevel);
-            Debug.Log("Player leveled up! They are now level " + currentLevel);
             UpdateExpToGain();
         }
     }
@@ -123,7 +120,7 @@ public class PlayerController : MonoBehaviour
     void UpdateHealth(float adjustment)
     {
         currentHp += adjustment;
-        PlayerDamaged?.Invoke(adjustment, currentHp, maxHp);
+        HealthChanged?.Invoke(adjustment, currentHp, maxHp);
         if (currentHp > maxHp)
         {
             currentHp = maxHp;
@@ -145,11 +142,12 @@ public class PlayerController : MonoBehaviour
         transform.position = position;
         currentHp = defaultHp;
         maxHp = defaultHp;
+        HealthChanged?.Invoke(0, currentHp, maxHp);
         currentLevel = 1;
         totalExperience = expCurve.Evaluate((float)currentLevel);
         UpdateExpToGain();
+        GainedExperience?.Invoke(0);
         moveSpeed = defaultMoveSpeed;
         weapon.Reset();
-        // TODO: Update bar positions
     }
 }

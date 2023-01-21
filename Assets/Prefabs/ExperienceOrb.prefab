@@ -100,6 +100,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   minExpValue: 3
   maxExpValue: 10
+  timeToLive: 5
 --- !u!58 &-3651098770073809499
 CircleCollider2D:
   m_ObjectHideFlags: 0
