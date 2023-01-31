@@ -6,7 +6,7 @@ public class Projectile : MonoBehaviour
     public static event Action<Projectile> Die;
     [SerializeField] private float damage = 0.0f;
 
-    private float lifetime = 10.0f;
+    private float lifetime = 5.0f;
     private bool paused = false;
     private Rigidbody2D rb;
     private Vector3 velocity;
@@ -20,6 +20,7 @@ public class Projectile : MonoBehaviour
     void OnEnable()
     {
         GameManager.GameStateChanged += CheckState;
+        lifetime = 5.0f;
     }
 
     void OnDisable()
@@ -36,15 +37,20 @@ public class Projectile : MonoBehaviour
             if (lifetime <= 0)
             {
                 // Destroy(gameObject);
-                gameObject.SetActive(false);
+                //gameObject.SetActive(false);
+                Die?.Invoke(this);
             }
         }
     }
 
     void OnCollisionEnter2D(Collision2D other)
     {
-        // Destroy(gameObject);
-        gameObject.SetActive(false);
+        if (other.gameObject.CompareTag("Player") != false)
+        {
+            // gameObject.SetActive(false);
+            Die?.Invoke(this);
+        }
+
     }
 
     public float GetDamage()
@@ -57,9 +63,9 @@ public class Projectile : MonoBehaviour
         damage = damageVal;
     }
 
-    void CheckState(GameStates newState)
+    void CheckState(GameState newState)
     {
-        paused = newState == GameStates.Paused;
+        paused = (newState != GameState.Playing);
         if (paused)
         {
             velocity = rb.velocity;

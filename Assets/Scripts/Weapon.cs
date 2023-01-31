@@ -19,7 +19,7 @@ public class Weapon : MonoBehaviour
     private float currentDamage;
     private float currentFireForce;
     private float currentFireDelay;
-    private IObjectPool<Projectile> projectiles;
+    private ObjectPool<Projectile> projectiles;
     private GameObject projectileContainer;
 
     #endregion
@@ -60,7 +60,7 @@ public class Weapon : MonoBehaviour
 
     private bool canFire()
     {
-        if (fireDelay <= 0)
+        if (fireDelay <= 0 && GameManager.Instance.CurrentState == GameState.Playing)
         {
             fireDelay = defaultFireDelay;
             return true;

@@ -20,6 +20,7 @@ public class Enemy : MonoBehaviour
     private float minDamage = 5.0f;
     private float maxDamage = 15.0f;
     private bool paused = false;
+    private float defaultHp = 25.0f;
 
     void Awake()
     {
@@ -30,15 +31,16 @@ public class Enemy : MonoBehaviour
             Debug.Log("Could not find target. Dying");
             gameObject.SetActive(false);
         }
+        GameManager.GameStateChanged += CheckState;
     }
 
     void OnEnable()
     {
+        hp = defaultHp;
         Damage = UnityEngine.Random.Range(minDamage, maxDamage);
-        GameManager.GameStateChanged += CheckState;
     }
 
-    void OnDisable()
+    void OnDestroy()
     {
         GameManager.GameStateChanged -= CheckState;
     }
@@ -83,17 +85,16 @@ public class Enemy : MonoBehaviour
         hp -= damage;
         if (hp <= 0)
         {
-            Killed(this);
+            Killed?.Invoke(this);
         }
     }
 
-    Vector3 GenerateNewOffset()
+    void CheckState(GameState newState)
     {
-        return new Vector3(UnityEngine.Random.Range(-8.0f, 8.0f), UnityEngine.Random.Range(-8.0f, 8.0f), 0.0f);
-    }
-
-    void CheckState(GameStates newState)
-    {
-        paused = newState == GameStates.Paused;
+        paused = (newState != GameState.Playing);
+        if (newState == GameState.Loading)
+        {
+            Killed?.Invoke(this);
+        }
     }
 }

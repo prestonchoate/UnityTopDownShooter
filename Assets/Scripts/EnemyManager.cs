@@ -1,6 +1,5 @@
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using UnityEngine.Pool;
 
 public class EnemyManager : MonoBehaviour
 {
@@ -10,15 +9,15 @@ public class EnemyManager : MonoBehaviour
     [SerializeField]
     private GameObject enemyPrefab;
     private int enemiesToPreload = 1000;
-    // TODO: Switch this to the built in ObjectPool
-    private static List<GameObject> enemies = new List<GameObject>();
     private int minX, minY = -250;
     private int maxX, maxY = 250;
     private float defaultSpawnTime = 0.25f;
     private float spawnTime = 0.25f;
+    private int defaultMaxActiveEnemies = 150;
     private int maxActiveEnemies = 150;
     private int activeEnemies = 0;
     private GameObject enemyContainer;
+    private IObjectPool<Enemy> enemyPool;
 
 
     void Awake()
@@ -34,8 +33,33 @@ public class EnemyManager : MonoBehaviour
         }
         enemyContainer = new GameObject("EnemyContainer");
         enemyContainer.transform.SetParent(transform);
-        LoadObjectPool(enemiesToPreload);
+        enemyPool = new ObjectPool<Enemy>(createFunc: InstantiateEnemy, GetEnemy, ReleaseEnemy, DestroyEnemy);
         Enemy.Killed += DeactivateEnemy;
+    }
+
+    Enemy InstantiateEnemy()
+    {
+        Enemy e = Instantiate(enemyPrefab).GetComponent<Enemy>();
+        e.transform.SetParent(enemyContainer.transform);
+        return e;
+    }
+
+    public void GetEnemy(Enemy e)
+    {
+        e.transform.position = GetSpawnPoint(GameManager.Instance.Player.transform.position, 30.0f);
+        e.gameObject.SetActive(true);
+        activeEnemies++;
+    }
+
+    public void ReleaseEnemy(Enemy e)
+    {
+        e.gameObject.SetActive(false);
+        activeEnemies--;
+    }
+
+    public void DestroyEnemy(Enemy e)
+    {
+        Destroy(e);
     }
 
     void OnDisable()
@@ -43,32 +67,16 @@ public class EnemyManager : MonoBehaviour
         Enemy.Killed -= DeactivateEnemy;
     }
 
-    // Function to add additional enemies to the pool
-    void LoadObjectPool(int objToPool)
-    {
-        for (int i = 0; i <= objToPool; i++)
-        {
-            GameObject enemy = GameObject.Instantiate(enemyPrefab);
-            enemy.transform.SetParent(enemyContainer.transform);
-            enemy.SetActive(false);
-            enemies.Add(enemy);
-
-        }
-    }
-
     void SpawnEnemies(int count = 1)
     {
         if (activeEnemies < maxActiveEnemies)
         {
-            IEnumerable<GameObject> enemiesToActivate = enemies.Where(e => e.activeInHierarchy == false).Take(count);
-            // TODO: If enemiesToActivate is empty add more enemies to the pool
-            foreach (GameObject enemyToActivate in enemiesToActivate)
+            int i = 0;
+            while (i < count)
             {
-
-                enemyToActivate.transform.position = GetSpawnPoint(GameManager.Instance.Player.transform.position, 30.0f);
-                //TODO: Before spawning show a spawn warning sprite
-                enemyToActivate.SetActive(true);
-                activeEnemies++;
+                Enemy e;
+                enemyPool.Get(out e);
+                i++;
             }
         }
     }
@@ -93,9 +101,8 @@ public class EnemyManager : MonoBehaviour
 
     void Update()
     {
-        // TODO: implement paused state here
         spawnTime -= Time.deltaTime;
-        if (spawnTime <= 0.0f)
+        if (spawnTime <= 0.0f && GameManager.Instance.CurrentState == GameState.Playing)
         {
             spawnTime = defaultSpawnTime;
             SpawnEnemies();
@@ -104,13 +111,12 @@ public class EnemyManager : MonoBehaviour
 
     void DeactivateEnemy(Enemy enemy)
     {
-        enemy.gameObject.SetActive(false);
-        activeEnemies--;
+        enemyPool.Release(enemy);
     }
 
     public void DeactivateAllEnemies()
     {
-        enemies.ForEach(e => e.gameObject.SetActive(false));
+        enemyPool.Clear();
         activeEnemies = 0;
     }
 }

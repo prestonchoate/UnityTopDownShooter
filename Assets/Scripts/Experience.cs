@@ -18,6 +18,16 @@ public class Experience : MonoBehaviour
         expValue = UnityEngine.Random.Range(minExpValue, maxExpValue);
     }
 
+    void OnEnable()
+    {
+        GameManager.GameStateChanged += HandleGameStateChange;
+    }
+
+    void OnDisable()
+    {
+        GameManager.GameStateChanged -= HandleGameStateChange;
+    }
+
     void OnTriggerEnter2D(Collider2D other)
     {
         if (other.gameObject.CompareTag("Player"))
@@ -34,6 +44,14 @@ public class Experience : MonoBehaviour
         if (timeToLive <= 0)
         {
             Destroy(gameObject);
+        }
+    }
+
+    void HandleGameStateChange(GameState newState)
+    {
+        if (newState != GameState.Playing)
+        {
+            Destroy(this);
         }
     }
 }

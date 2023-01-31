@@ -1,8 +1,9 @@
 using System;
+using System.Collections;
 using UnityEditor;
 using UnityEngine;
 
-public enum GameStates
+public enum GameState
 {
     MainMenu,
     Loading,
@@ -14,12 +15,22 @@ public enum GameStates
 
 public class GameManager : MonoBehaviour
 {
-    public static event Action<GameStates> GameStateChanged;
+    public static event Action<GameState> GameStateChanged;
     public static event Action<int> ScoreUpdated;
+    public static event Action DoneLoading;
 
     public static GameManager Instance { get; private set; }
     public GameObject Player { get; private set; }
     public int Score { get; private set; }
+
+    public GameState CurrentState
+    {
+        get
+        {
+            return gameState;
+        }
+        private set { }
+    }
 
     [SerializeField] private GameObject lootPrefab;
     [SerializeField] private GameObject playerPrefab;
@@ -27,9 +38,10 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Canvas worldSpaceCanvas;
 
     private GameObject enemyManager;
-    private GameStates gameState;
-    private GameStates previousState;
+    private GameState gameState;
+    private GameState previousState;
     private Vector3 defaultPlayerPosition = new Vector3(0, 0, 0);
+    private bool finishedLoading = false;
 
 
     void Awake()
@@ -43,14 +55,19 @@ public class GameManager : MonoBehaviour
         {
             Instance = this;
         }
-        ChangeGameState(GameStates.Loading);
+        SpawnPlayer();
+    }
+
+    void Start()
+    {
+        ChangeGameState(GameState.Loading);
         Enemy.Killed += SpawnLoot;
         PlayerController.Died += HandlePlayerDeath;
         Score = 0;
         ScoreUpdated?.Invoke(Score);
-        SpawnPlayer();
         CreateEnemyManager();
-        ChangeGameState(GameStates.Playing);
+        finishedLoading = true;
+        DoneLoading?.Invoke();
     }
 
     void OnDisable()
@@ -65,17 +82,17 @@ public class GameManager : MonoBehaviour
         {
             switch (gameState)
             {
-                case GameStates.Paused:
+                case GameState.Paused:
                     ChangeGameState(previousState);
                     break;
                 default:
                     previousState = gameState;
-                    ChangeGameState(GameStates.Paused);
+                    ChangeGameState(GameState.Paused);
                     break;
             }
         }
 
-        if (gameState == GameStates.Paused && Input.GetKeyDown(KeyCode.Q))
+        if (gameState == GameState.Paused && Input.GetKeyDown(KeyCode.Q))
         {
             Application.Quit();
 #if (UNITY_EDITOR)
@@ -83,18 +100,27 @@ public class GameManager : MonoBehaviour
 #endif
         }
 
-        if (gameState == GameStates.GameOver && Input.GetKeyDown(KeyCode.R))
+        if (gameState == GameState.GameOver && Input.GetKeyDown(KeyCode.R))
         {
             RestartGame();
+        }
+
+        if (gameState == GameState.Loading && finishedLoading && Input.GetKeyDown(KeyCode.Return))
+        {
+            ChangeGameState(GameState.Playing);
+            finishedLoading = false;
         }
     }
 
     void SpawnLoot(Enemy go)
     {
-        Score += 100;
-        ScoreUpdated.Invoke(Score);
-        // TODO: Make this pull spawnable loot from the gameObject passed into this event observer
-        GameObject.Instantiate(lootPrefab, go.transform.position, go.transform.rotation);
+        if (gameState == GameState.Playing)
+        {
+            Score += 100;
+            ScoreUpdated.Invoke(Score);
+            // TODO: Make this pull spawnable loot from the gameObject passed into this event observer
+            GameObject.Instantiate(lootPrefab, go.transform.position, go.transform.rotation);
+        }
     }
 
     public static int GetRandomInteger(int min = 0, int max = 100)
@@ -120,10 +146,10 @@ public class GameManager : MonoBehaviour
     void HandlePlayerDeath()
     {
         Player.SetActive(false);
-        ChangeGameState(GameStates.GameOver);
+        ChangeGameState(GameState.GameOver);
     }
 
-    void ChangeGameState(GameStates newState)
+    void ChangeGameState(GameState newState = GameState.Playing)
     {
         gameState = newState;
         GameStateChanged?.Invoke(gameState);
@@ -131,13 +157,15 @@ public class GameManager : MonoBehaviour
 
     void RestartGame()
     {
-        ChangeGameState(GameStates.Loading);
+        ChangeGameState(GameState.Loading);
         Player.gameObject.SetActive(false);
         Player.GetComponent<PlayerController>()?.Reset(defaultPlayerPosition);
         EnemyManager.Instance.DeactivateAllEnemies();
         Score = 0;
         ScoreUpdated.Invoke(Score);
         Player.SetActive(true);
-        ChangeGameState(GameStates.Playing);
+        finishedLoading = true;
+        DoneLoading?.Invoke();
+        // ChangeGameState(GameState.Playing);
     }
 }

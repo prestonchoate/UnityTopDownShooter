@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] private float defaultMoveSpeed = 5.0f;
     [SerializeField] private AnimationCurve expCurve;
+    [SerializeField] private CircleCollider2D pickupRadius;
 
     private Weapon weapon;
     private Rigidbody2D rb;
@@ -20,6 +21,7 @@ public class PlayerController : MonoBehaviour
     private int currentLevel = 1;
     private float maxHp = 100.0f;
     private float defaultHp = 100.0f;
+    private float defaultPickupRadius = 5.0f;
     private float moveSpeed;
     private float currentHp;
     private bool paused;
@@ -49,6 +51,7 @@ public class PlayerController : MonoBehaviour
         currentHp = maxHp;
         UpdateExpToGain();
         totalExperience = expCurve.Evaluate((float)currentLevel);
+        LevelUp?.Invoke(currentLevel);
     }
 
     void Update()
@@ -132,9 +135,9 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    void CheckState(GameStates newState)
+    void CheckState(GameState newState)
     {
-        paused = newState == GameStates.Paused;
+        paused = (newState != GameState.Playing);
     }
 
     public void Reset(Vector2 position)
@@ -147,7 +150,9 @@ public class PlayerController : MonoBehaviour
         totalExperience = expCurve.Evaluate((float)currentLevel);
         UpdateExpToGain();
         GainedExperience?.Invoke(0);
+        LevelUp?.Invoke(currentLevel);
         moveSpeed = defaultMoveSpeed;
+        pickupRadius.radius = defaultPickupRadius;
         weapon.Reset();
     }
 }
